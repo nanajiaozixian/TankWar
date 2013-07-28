@@ -1,19 +1,23 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
+import java.util.ArrayList;
 
 
 public class TankClient extends Frame{
 
+	private static final long serialVersionUID = 1L;
 	public static final int GAME_WIDTH = 800;
 	public static final int GAME_HEIGHT = 600;
-	public static final Color COLOR_BACKGROUN = new Color(151,249,138);
-	public static final Color COLOR_MYTANK = new Color(251,77,151);
-	
+	public static final Color COLOR_BACKGROUN = new Color(151,249,138);	
 	int x = 50;
 	int y = 50;
 	Image offScreenImage = null;
 	Tank myTank = null;
-	Missile m = null;
+	Tank enemyTank = null;
+	List<Missile> missiles = new ArrayList<Missile>();
+	Explode ex = null;
+	
 	public static void main(String[] args) {
 		
 		TankClient tc = new TankClient();
@@ -33,7 +37,9 @@ public class TankClient extends Frame{
 				System.exit(0);			
 			}
 		});
-		myTank = new Tank(50,50,this);
+		myTank = new Tank(50,50,this,true);
+		enemyTank = new Tank(80,80,this,false);
+		ex = new Explode(100, 100);
 		this.addKeyListener(new KeyAction());
 		
 		setVisible(true);
@@ -41,11 +47,29 @@ public class TankClient extends Frame{
 		new Thread(new PaintThread()).start();
 	}
 	
-	public void paint(Graphics g){		
+	public void paint(Graphics g){
+		g.drawString("Missiles number: "+ missiles.size(), 10, 50);
 		myTank.draw(g);
-		if(m!=null){
-			m.draw(g);
+		if(enemyTank!=null){
+			enemyTank.draw(g);	
 		}
+		Missile m = null;
+		for (int i = 0; i < missiles.size(); i++) {
+			m = missiles.get(i);
+			if(!m.isLive()){
+				missiles.remove(m);
+			} else if (m != null) {
+				m.draw(g);
+				if (enemyTank != null) {
+					if (m.hitTank(enemyTank)) {
+						enemyTank = null;
+						missiles.remove(m);
+					}
+				}
+			}
+		}
+		ex.draw(g);
+		
 	}
 
 	//¼õÉÙÉÁË¸

@@ -1,22 +1,29 @@
 import java.awt.*;
 
 public class Missile {
-	public static final int MISSILE_SPEED_X = 10;
-	public static final int MISSILE_SPEED_Y = 10;
+	public static final int MISSILE_SPEED_X = 1;
+	public static final int MISSILE_SPEED_Y = 1;
+	public static final int MISSILE_WIDTH = 10;
+	public static final int MISSILE_HEIGHT = 10;
+	private boolean bLive = true; //×Óµ¯ÊÇ·ñ´æ»î
 	int x, y;
 	Tank.Direction dir;
+
 	Missile(int x_in, int y_in, Tank.Direction dir){
-		x = x_in;
-		y = y_in;
+		x = x_in - MISSILE_WIDTH/2;
+		y = y_in - MISSILE_HEIGHT/2;
 		this.dir = dir;
+		
 	}
 	
 	
 	public void draw(Graphics g) {
+		isOutorScreen();
 		Color c = g.getColor();
 		g.setColor(Color.black);
-		g.fillOval(x, y, 10, 10);
+		g.fillOval(x, y, MISSILE_WIDTH, MISSILE_HEIGHT);
 		move();
+		g.setColor(c);
 	}
 	
 	public void move(){
@@ -53,5 +60,30 @@ public class Missile {
 			break;
 		}
 	
+	}
+
+	public boolean isOutorScreen (){
+		boolean bOut = false;
+		if(x<0 || y<0 || x>TankClient.GAME_WIDTH || y>TankClient.GAME_HEIGHT){
+			bOut = true;
+			bLive = false;
+		}
+		return bOut;
+	}
+	
+	public boolean isLive() {
+		return bLive;
+	}
+	
+	public Rectangle getRec(){
+		return new Rectangle(x, y, MISSILE_WIDTH, MISSILE_HEIGHT);
+	}
+	
+	public boolean hitTank(Tank t){
+		boolean bHitted = false;
+		if(this.getRec().intersects(t.getRec())){
+			bHitted = true;
+		}
+		return bHitted;
 	}
 }
