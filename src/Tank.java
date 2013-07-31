@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.util.List;
 
 
 public class Tank {
@@ -17,14 +18,18 @@ public class Tank {
 	public static final int TANK_HEIGHT = 30;
 	private TankClient tc = null;
 	private boolean bGood = false;
-	public static final Color COLOR_MYTANK = new Color(251,77,151);
+	public static final Color COLOR_MYTANK = new Color(209,87,240);
 	public static final Color COLOR_ENEMYTANK = new Color(60,132,230);
+	public static final Color COLOR_LIVE = new Color(243,102,118);
 	private boolean bLive = true;
 	private Random rd = new Random();//Ëæ»úÊý
 	private Direction[] dirs = Direction.values();
-	public static final int RANDOME_TIME = 10;
+	public static final int RANDOME_TIME = 2;
 	private int t = 0;
 	private int iOldX, iOldY;
+	public static final int MYTANK_LIVES = 5;
+	private int iLives = MYTANK_LIVES;
+	int iNum=0;
 	
 	Tank(int x_in, int y_in, TankClient tc_in, boolean b){
 		x = x_in;
@@ -39,6 +44,9 @@ public class Tank {
 	
 	public void draw(Graphics g){
 		if(!bLive){
+			/*if(bGood){
+				g.drawString("Press F12 for Relive!", 300, 50);
+			}*/
 			return;
 		}
 		if(bGood){
@@ -56,6 +64,11 @@ public class Tank {
 		move();
 		hitWall(tc.w1);
 		hitWall(tc.w2);
+		//hitOtherTanks(tc.enemyTanks);
+		if(bGood){
+			drawBlood(g);
+			eatBlood(tc.blood);
+		}
 	}
 	
 	public void move(){
@@ -74,7 +87,7 @@ public class Tank {
 			t++;
 			
 			if((rd.nextInt(40))>38){
-				this.fire();
+				this.fire(fireDir);
 			}
 		} 
 		switch (dir) {
@@ -146,7 +159,8 @@ public class Tank {
 		default:
 			break;
 		}
-		
+		iNum++;
+System.out.println("key: "+ iNum);
 		locateDirection();
 	}
 	
@@ -154,7 +168,7 @@ public class Tank {
 		int keycode = e.getKeyCode();
 		switch(keycode){
 		case KeyEvent.VK_CONTROL:
-			fire();
+			fire(fireDir);
 			break;
 		case KeyEvent.VK_KP_DOWN:
 		case KeyEvent.VK_DOWN :
@@ -172,6 +186,20 @@ public class Tank {
 		case KeyEvent.VK_RIGHT :
 			bR=false;
 			break;
+		case KeyEvent.VK_A :
+			superFire();
+			break;
+		case KeyEvent.VK_F10:
+			tc.playNewGame();
+			break;
+		/*case KeyEvent.VK_F12:
+			if(!bLive && bGood){
+				bLive = true;
+				iLives = MYTANK_LIVES;
+				tc.enemyNumber = TankClient.ENEMY_NUMBER_INIT;
+			}
+			break;
+			*/
 		default:
 			break;
 		}
@@ -213,12 +241,12 @@ public class Tank {
 		move();
 	}
 
-	public Missile fire(){
+	public Missile fire(Direction d){
 		if(!bLive){
 			return null;
 		}
 		pTankCen = tankCenter();
-		Missile m = new Missile(pTankCen.x, pTankCen.y, this.bGood, fireDir, this.tc);
+		Missile m = new Missile(pTankCen.x, pTankCen.y, this.bGood, d, this.tc);
 		tc.missiles.add(m);
 		return m;
 	}
@@ -298,6 +326,60 @@ public class Tank {
 			this.x = iOldX;
 			this.y = iOldY;
 			return true;
+		}
+		return false;
+	}
+	
+	public boolean hitOtherTanks(List<Tank> ts){
+		
+		if(!this.bLive){
+			return false;
+		}
+		Tank t = null;
+		for(int i =0; i<ts.size(); i++){
+			t = ts.get(i);
+			if (t != this && t!=null) {
+				if (this.getRec().intersects(t.getRec())) {
+					this.dir = t.dir = Direction.STOP;
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public void superFire(){
+		Direction[] dirs= Direction.values();
+		for(int i=0; i<dirs.length; i++){
+			if(dirs[i]!=Direction.STOP){
+				fire(dirs[i]);
+			}
+		}
+	}
+	
+	public void setLives(int iValue){
+		iLives = iValue;
+	}
+	public int getLives(){
+		return iLives;
+	}
+	
+	public void drawBlood(Graphics g){
+		Color c = g.getColor();
+		g.setColor(COLOR_LIVE);
+		g.drawRect(x, y-12, 5*MYTANK_LIVES, 10);
+		
+		g.fillRect(x, y-12, 5*iLives, 10);
+		g.setColor(c);
+	}
+	
+	public boolean eatBlood(Blood bd){
+		if(bd.isLive()){
+			if(this.getRec().intersects(bd.getRec())){
+				this.iLives = MYTANK_LIVES;
+				bd.setLive(false);
+				return true;
+			}
 		}
 		return false;
 	}

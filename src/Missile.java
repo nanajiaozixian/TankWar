@@ -11,8 +11,8 @@ public class Missile {
 	Tank.Direction dir;
 	TankClient tc = null;
 	private boolean bGood = false;
-	public static final Color COLOR_GOOD = Color.black;
-	public static final Color COLOR_BAD = Color.red;
+	public static final Color COLOR_GOOD = new Color(253, 139, 27);
+	public static final Color COLOR_BAD = Color.black;
 	
 
 	Missile(int x_in, int y_in, boolean bGood_in, Tank.Direction dir, TankClient tc_in){
@@ -103,7 +103,16 @@ public class Missile {
 		if(this.getRec().intersects(t.getRec()) && this.bGood!= t.isGood()){
 			Explode e = new Explode(x,y);
 			tc.explodes.add(e);
-			t.setLive(false);
+			if(t.isGood()){
+				int i = t.getLives();
+				i--;
+				t.setLives(i);
+				if(i<=0){
+					t.setLive(false);
+				}
+			}else{
+				t.setLive(false);
+			}
 			bHitted = true;
 			this.bLive = false;
 		}

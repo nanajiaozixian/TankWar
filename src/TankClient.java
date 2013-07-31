@@ -17,8 +17,11 @@ public class TankClient extends Frame{
 	List<Tank> enemyTanks = new ArrayList<Tank>();
 	List<Missile> missiles = new ArrayList<Missile>();
 	List<Explode> explodes = new ArrayList<Explode>();
-	public static final int ENEMY_NUMBER = 15;
+	public static final int ENEMY_NUMBER_INIT = 20;
+	public static final int ENEMY_NUMBER = 50;
 	public Wall w1 = null, w2 = null;
+	public Blood blood = null;
+	public int enemyNumber = 0;
 	
 	public static void main(String[] args) {
 		
@@ -39,23 +42,25 @@ public class TankClient extends Frame{
 				System.exit(0);			
 			}
 		});
-		myTank = new Tank(50,50,this,true);
-		
-		// 添加多两敌人坦克
-		for(int i=0; i<ENEMY_NUMBER; i++){
-			Tank t = new Tank(50*(i+2),50*(i+2),this,false);
-			enemyTanks.add(t);
-		}
-		this.addKeyListener(new KeyAction());
-		w1 = new Wall(200, 300, 20, 200);
-		w2 = new Wall(400, 200, 200, 20);
-		setVisible(true);
-		
+		playNewGame();
 		new Thread(new PaintThread()).start();
 	}
 	
 	public void paint(Graphics g){
-		g.drawString("EnemyTanks Number: "+ enemyTanks.size(), 10, 50);
+		Color c = g.getColor();
+		
+		if(enemyTanks.size()==0 && enemyNumber == ENEMY_NUMBER){
+			g.setColor(Color.red);
+			g.drawString("Winner!!!!!! ", 350, 350);
+			g.drawString("Press F10 for Play New Game! ", 100, 50);
+		}else if(!myTank.isLive()){
+			g.setColor(Color.red);
+			g.drawString("Loser!!!!!! ", 350, 350);
+			g.drawString("Press F10 for Play New Game! ", 100, 50);
+		}
+		g.drawString("EnemyTanks Number: "+ enemyTanks.size(), 650, 50);
+		
+		//myTank.hitOtherTanks(enemyTanks);
 		myTank.draw(g);
 		Missile m=null;
 		for (int i = 0; i < missiles.size(); i++) {
@@ -79,6 +84,7 @@ public class TankClient extends Frame{
 			if(!enemy.isLive()){
 				enemyTanks.remove(enemy);
 			}else if(enemy!=null){
+				//enemy.hitOtherTanks(enemyTanks);
 				enemy.draw(g);	
 			}
 		}
@@ -98,6 +104,16 @@ public class TankClient extends Frame{
 		//draw wall
 		w1.draw(g);
 		w2.draw(g);
+		blood.draw(g);
+		
+		//添加新的敌军
+		if(enemyTanks.size()<5 && enemyNumber<ENEMY_NUMBER){
+			for(int i=0; i<5; i++){
+				enemyTanks.add(new Tank(150*i, 30, this, false));
+			}
+			enemyNumber = enemyNumber+5;
+		}
+		g.setColor(c);
 	}
 
 	//减少闪烁
@@ -123,7 +139,6 @@ public class TankClient extends Frame{
 				try {
 					Thread.sleep(50);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -141,5 +156,23 @@ public class TankClient extends Frame{
 		public void keyReleased(KeyEvent e){
 			myTank.keyReleased(e);
 		}
+	}
+	
+	public void playNewGame(){
+		myTank = null;
+		myTank = new Tank(50,50,this,true);
+		enemyTanks.clear();
+		// 添加多辆敌人坦克
+		for(int i=0; i<ENEMY_NUMBER_INIT; i++){
+			Tank t = new Tank(50*i,50*(i+2),this,false);
+			enemyTanks.add(t);
+		}
+		enemyNumber =  ENEMY_NUMBER_INIT;
+		this.addKeyListener(new KeyAction());
+		w1 = new Wall(200, 300, 20, 200);
+		w2 = new Wall(400, 200, 200, 20);
+		blood = new Blood();
+		setVisible(true);
+		
 	}
 }
